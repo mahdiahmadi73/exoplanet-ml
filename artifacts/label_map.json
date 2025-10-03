@@ -1,1 +1,1 @@
-{"label_classes": ["CANDIDATE", "CONFIRMED", "FA", "FALSE POSITIVE", "REFUTED"], "features": ["period_days", "transit_depth_ppm", "planet_radius_re", "stellar_radius_rs", "snr"]}
+{"label_classes": ["CANDIDATE", "CONFIRMED", "FALSE POSITIVE", "REFUTED"], "features": ["period_days", "transit_depth_ppm", "planet_radius_re", "stellar_radius_rs", "snr"]}

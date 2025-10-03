@@ -30,7 +30,7 @@ KOI_COLMAP = {
     "stellar_radius_rs": "koi_srad",
     "snr": "koi_model_snr",      # prefer this
     "epoch": "koi_time0bk",
-    "label_raw": "koi_pdisposition",  # prefer this
+    "label_raw": "koi_disposition",  # prefer this according  to Markus' dataset Validataion.
 }
 K2_COLMAP = {
     "source_id": "pl_name",           # fallback to 'hostname'
@@ -52,8 +52,13 @@ TOI_COLMAP = {
     "epoch": "pl_tranmid",
     "label_raw": "tfopwg_disp",
 }
-LABEL_MAP = {"CONFIRMED": ["CONFIRMED", "CONF", "CANDIDATE CONFIRMED", "KP", "CP", "KNOWN PLANET"], "CANDIDATE": ["CANDIDATE", "PC", "APC", "AMBIGUOUS", "CAND", "CANDIDATE AMBIGUOUS"], "FALSE POSITIVE": ["FALSE POSITIVE", "FP", "FALSE-POSITIVE", "NOT DISPOSITIONED - FALSE POSITIVE"]}
-
+LABEL_MAP = {
+    "CONFIRMED": ["CONFIRMED", "CONF", "CANDIDATE CONFIRMED", "KP", "CP", "KNOWN PLANET"],
+    "CANDIDATE": ["CANDIDATE", "PC", "APC", "AMBIGUOUS", "CAND", "CANDIDATE AMBIGUOUS"],
+    "FALSE POSITIVE": [
+        "FALSE POSITIVE", "FP", "FALSE-POSITIVE", "NOT DISPOSITIONED - FALSE POSITIVE", "FA"  
+    ],
+}
 
 #To ignore comment lines and stuff at top of the csv file
 def robust_read_table(path):
@@ -93,7 +98,6 @@ def robust_read_table(path):
             **common_kwargs
         )
 
-
 def normalize_label(value: str) -> str:
     if value is None or (isinstance(value, float) and np.isnan(value)):
         return np.nan
@@ -110,35 +114,35 @@ def normalize_label(value: str) -> str:
     if s == "CP":
         return "CONFIRMED"
     return s
+
 def load_and_standardize(path: Path, mission: str, colmap: dict) -> pd.DataFrame:
     df = robust_read_table(path)
     out = pd.DataFrame()
     for unified_col, src_col in colmap.items():
         out[unified_col] = df[src_col] if src_col in df.columns else np.nan
     out["mission"] = mission
-    out["label_coarse"] = out["label_raw"].apply(normalize_label)
 
     # ---- KOI / Kepler fallbacks ----
     if mission.upper() in ("KOI", "KEPLER"):
-        # If koi_pdisposition missing, fallback to koi_disposition
-        if out["label_raw"].isna().all() and "koi_disposition" in df.columns:
-            out["label_raw"] = df["koi_disposition"]
-
-        # If koi_model_snr missing, fallback to koi_snr
+        # Primary label is koi_disposition; if missing, fallback to koi_pdisposition
+        if out["label_raw"].isna().all() and "koi_pdisposition" in df.columns:
+            out["label_raw"] = df["koi_pdisposition"]
+        # SNR fallback
         if out["snr"].isna().all() and "koi_snr" in df.columns:
             out["snr"] = df["koi_snr"]
 
     # ---- K2 fallbacks ----
     if mission.upper() == "K2":
-        # Fallback ID
-        if out["source_id"].isna().all() and "hostname" in df.columns:
-            out["source_id"] = df["hostname"]
-
-        # Fallback for transit depth
+        if out["source_id"].isna().all():
+            if "hostname" in df.columns and "pl_letter" in df.columns:
+                out["source_id"] = df["hostname"].astype(str) + "-" + df["pl_letter"].astype(str)
+            elif "hostname" in df.columns:
+                out["source_id"] = df["hostname"].astype(str)
+        # Transit depth fallback
         if out["transit_depth_ppm"].isna().all():
-            for c in ["tran_depth", "k2_trandep"]:
-                if c in df.columns:
-                    out["transit_depth_ppm"] = pd.to_numeric(df[c], errors="coerce")
+            for alt in ("tran_depth", "k2_trandep"):
+                if alt in df.columns:
+                    out["transit_depth_ppm"] = pd.to_numeric(df[alt], errors="coerce")
                     break
 
     # ---- TESS fallbacks ----
@@ -146,13 +150,14 @@ def load_and_standardize(path: Path, mission: str, colmap: dict) -> pd.DataFrame
         if out["period_days"].isna().all():
             for c in ["orbital_period", "toi_period"]:
                 if c in df.columns:
-                    out["period_days"] = pd.to_numeric(df[c], errors="coerce")
-                    break
+                    out["period_days"] = pd.to_numeric(df[c], errors="coerce"); break
         if out["transit_depth_ppm"].isna().all():
             for c in ["transit_depth", "toi_transit_depth"]:
                 if c in df.columns:
-                    out["transit_depth_ppm"] = pd.to_numeric(df[c], errors="coerce")
-                    break
+                    out["transit_depth_ppm"] = pd.to_numeric(df[c], errors="coerce"); break
+
+    # Now map the (possibly updated) raw label → coarse label
+    out["label_coarse"] = out["label_raw"].apply(normalize_label)
 
     # Ensure numeric casting
     for c in FEATURES_ORDER + ["epoch"]:
