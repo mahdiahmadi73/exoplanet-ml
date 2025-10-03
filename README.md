@@ -13,7 +13,7 @@
 
 ---
 
-## 🧾 Labels
+##  Labels
 I normalize all mission labels into two forms:
 
 - **Multiclass (`label_multiclass`)**  
@@ -27,7 +27,7 @@ I normalize all mission labels into two forms:
 
 ---
 
-## 📊 Features
+##  Features
 The pipeline extracts five core **tabular features** (common across missions):
 
 - `period_days` → orbital period [days]  
@@ -43,3 +43,11 @@ z_period_days, z_transit_depth_ppm, z_planet_radius_re, z_stellar_radius_rs, z_s
 ```
 
 ---
+
+##
+To remember,how we preapared the data, artifacts are availabe.
+Some values were missing → we filled them in using the median from the training set. Features had very different scales (e.g. radius in Earth units vs period in days)  we rescaled them so they all fit into a standard range (z-scoring).
+
+numeric_imputer.joblib : remembers what numbers we used to fill in missing values.
+numeric_scaler.joblib : remembers the average and standard deviation for each feature, so we can scale new data exactly the same way.
+label_map.json : documents how labels like CP, PC, or FP were converted into CONFIRMED, CANDIDATE, or FALSE POSITIVE.
