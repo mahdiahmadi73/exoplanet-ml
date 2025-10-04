@@ -1,1 +1,25 @@
-{"label_classes": ["CANDIDATE", "CONFIRMED", "FALSE POSITIVE", "REFUTED"], "features": ["period_days", "transit_depth_ppm", "planet_radius_re", "stellar_radius_rs", "snr"]}
+{
+  "CONFIRMED": [
+    "CONFIRMED",
+    "CONF",
+    "CANDIDATE CONFIRMED",
+    "KP",
+    "CP",
+    "KNOWN PLANET"
+  ],
+  "CANDIDATE": [
+    "CANDIDATE",
+    "PC",
+    "APC",
+    "AMBIGUOUS",
+    "CAND",
+    "CANDIDATE AMBIGUOUS"
+  ],
+  "FALSE POSITIVE": [
+    "FALSE POSITIVE",
+    "FP",
+    "FALSE-POSITIVE",
+    "NOT DISPOSITIONED - FALSE POSITIVE",
+    "FA"
+  ]
+}

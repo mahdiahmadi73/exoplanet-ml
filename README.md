@@ -141,3 +141,29 @@ I applied UMAP (Uniform Manifold Approximation and Projection), a non-linear dim
 	2.	Expecting ML models to perform better than naive thresholds, since structure is present but nonlinear.
 
 ⸻
+
+
+
+
+
+
+⸻
+
+Label Mapping
+
+Mission Raw Label (examples)	label_coarse (normalized)	label_binary (numeric)
+CONFIRMED, CONF, KP, CP, KNOWN PLANET	CONFIRMED	1
+CANDIDATE, PC, APC, AMBIGUOUS, CANDIDATE AMBIGUOUS	CANDIDATE	0
+FALSE POSITIVE, FP, FALSE-POSITIVE, FA, NOT DISPOSITIONED - FALSE POSITIVE	FALSE POSITIVE	0
+
+
+⸻
+
+ Explanation
+	•	label_coarse is the human-readable normalized label across Kepler, K2, and TESS.
+	•	label_binary is the simplified machine-learning target:
+	•	1 = confirmed exoplanet
+	•	0 = everything else (candidate or false positive).
+
+⸻
+
